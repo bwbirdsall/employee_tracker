@@ -88,21 +88,32 @@ def add_project
   project = Project.new({:name => name, :done => false})
   project.save
   "'#{project.name}' has been saved to the database.\n\n"
-  puts "What employee should #{project.name} be assigned to?"
-  employee_name = gets.chomp
-  until Employee.find_employee(employee_name) != nil
-    puts "That is not a valid employee. Enter 'l' to list employees, or have another go at properly entering an employee's name."
-    bad_job_choice = gets.chomp
-    if bad_job_choice == 'l'
-      list_employees
-      puts "Enter the name of the employee you wish to assign #{project.name} to."
-      employee_name = gets.chomp
+  complete = false
+  until complete == true
+    puts "What employee should #{project.name} be assigned to?"
+    employee_name = gets.chomp
+    until Employee.find_employee(employee_name) != nil
+      puts "That is not a valid employee. Enter 'l' to list employees, or have another go at properly entering an employee's name."
+      bad_job_choice = gets.chomp
+      if bad_job_choice == 'l'
+        list_employees
+        puts "Enter the name of the employee you wish to assign #{project.name} to."
+        employee_name = gets.chomp
+      else
+        employee_name = bad_job_choice
+      end
+    end
+    employee = Employee.find_employee(employee_name)
+    project.employees << employee
+
+    puts "Would you like to assign another employee to #{project.name}? (y/n)"
+    complete = gets.chomp
+    if complete == 'y'
+      complete = false
     else
-      employee_name = bad_job_choice
+      complete = true
     end
   end
-  employee = Employee.find_employee(employee_name)
-  employee.projects << project
 end
 
 def list_employees
@@ -142,12 +153,29 @@ def list_projects
   puts "\n\n"
   choice = nil
   until choice == 'c'
-    puts "If you would like to mark a project as done press 'd' otherwise press 'c' to continue."
+    puts "If you would like to mark a project as done press 'd', or if you would like to see which employees are assigned to a project, press 'e'."
+    puts "Otherwise press 'c' to continue."
     choice = gets.chomp
     if choice == 'd'
       mark_project_done
+    elsif choice == 'e'
+      list_project_employees
     end
   end
+end
+
+def list_project_employees
+  puts "Enter the name of the project for which you would like to see the employee list:"
+  project_name = gets.chomp
+  until Project.find_project(project_name) != nil
+    puts "That is not a valid project name. Please try again."
+    project_name = gets.chomp
+  end
+  project = Project.find_project(project_name)
+  employees = project.employees
+  puts "\n"
+  employees.each { |employee| puts employee.name }
+  puts "\n"
 end
 
 def mark_project_done
